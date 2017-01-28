@@ -47,3 +47,17 @@ for i in range(1,1001):
         VALUES (?, ?, ?, ?)''',
 	    (i, randint(1, 100), "Paper%d" % i, True if randint(1, 2) == 2 else False))
 db.commit()
+
+# Представление, показывающее конференции с высоким процентом принятия
+cur.execute('''
+CREATE VIEW HighPaperAcceptance AS
+SELECT C.name,
+       CE.year,
+       COUNT(p.id) as total_papers,
+       AVG(p.accepted) AS acceptance_ratio
+FROM ConferenceEvent CE
+JOIN Conference C ON C.id = CE.conference_id
+JOIN Paper p ON p.event_id = CE.id
+GROUP BY C.name, CE.year
+HAVING total_papers > 5 AND acceptance_ratio > 0.75''')
+db.commit()
