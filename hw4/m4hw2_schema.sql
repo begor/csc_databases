@@ -53,3 +53,32 @@ INSERT INTO PaperReviewing(paper_id, reviewer_id) VALUES
     (2, 1), (2, 2), (2, 4),
     (3, 3), (3, 4), (3, 5),
     (4, 2), (4, 3), (4, 4);
+
+CREATE OR REPLACE FUNCTION SubmitReview(_paper_id INT, _reviewer_id INT, _score INT)
+RETURNS VOID AS $$
+DECLARE
+  review_count INT;
+  avg_score REAL;
+BEGIN
+  IF _score < 1 OR _score > 7 THEN
+    RAISE EXCEPTION 'Paper review not found';
+  END IF;
+
+  UPDATE PaperReviewing SET score = _score WHERE paper_id = _paper_id AND reviewer_id = _reviewer_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Paper review not found';
+  END IF;
+
+  SELECT COUNT(paper_id), AVG(score) INTO review_count, avg_score FROM PaperReviewing
+  WHERE paper_id = _paper_id AND score IS NOT NULL;
+
+  IF review_count = 3 THEN
+    IF avg_score IS NOT NULL AND avg_score > 4 THEN
+      UPDATE Paper SET accepted = TRUE WHERE id = _paper_id;
+    ELSE
+      UPDATE Paper SET accepted = FALSE WHERE id = _paper_id;
+    END IF;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
