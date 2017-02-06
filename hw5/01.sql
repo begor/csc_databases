@@ -1,7 +1,7 @@
-CREATE VIEW Count AS SELECT COUNT(*) as count FROM T;                           
-                                                                                
-SELECT t.value, COUNT(*) FROM T t                                               
-LEFT JOIN T t1 ON t.id < t1.id                                                  
-JOIN Count                                                                      
-GROUP BY t.id                                                                   
-HAVING COUNT(*) = (count / 2) + 1;  
+SELECT a.value, COUNT(*)
+FROM T a, T b
+GROUP BY a.value
+HAVING
+  SUM(CASE WHEN b.value <= a.value THEN 1 ELSE 0 END) >= (COUNT(*) + 1) / 2
+  AND
+  SUM(CASE WHEN b.value >= a.value THEN 1 ELSE 0 END) >= (COUNT(*) / 2) + 1;
